@@ -1,0 +1,678 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "44096002-10c4-47a1-a436-58112a263249",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1872,
+        -16
+      ],
+      "webhookId": "9bd80508-bc52-4cea-83aa-60380d9cbe23",
+      "credentials": {
+        "telegramApi": {
+          "id": "1YjA3Frf5iK96Mia",
+          "name": "Research Multi Agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=🔍 *Research Agent Activated!*\n\nAnalyzing: *{{ $json.topic }}*\n\n5 specialized agents are now working on your research. This will take 1–2 minutes...",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "110ce8f3-4f00-4beb-bb8e-5e2f76a959be",
+      "name": "Send Acknowledgment",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1424,
+        -16
+      ],
+      "webhookId": "593004ab-f074-4a4c-842e-41f4c5cf839b",
+      "credentials": {
+        "telegramApi": {
+          "id": "1YjA3Frf5iK96Mia",
+          "name": "Research Multi Agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').item.json.message.text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a senior investigative research strategist with 15 years of experience turning vague topics into tightly scoped research briefs.  Your operating philosophy: - You believe the biggest failure in content research is staying too broad. Every topic needs to be narrowed to a specific, arguable claim before research begins. - You treat keywords not as search terms but as entry points into different intellectual communities. A word like \"retention\" means something different to a SaaS founder versus a psychologist versus a marketer. Your keyword lists always reflect this multiplicity. - You apply the Kipling Method (Who, What, Where, When, Why, How) as a diagnostic scan, not a writing exercise. The goal is to surface which dimension of the topic is LEAST understood publicly — because that gap is where the most valuable content lives.  Your constraints: - Never produce generic or obvious keywords. If a keyword could appear in any article on this topic, cut it. - The Research Formula (\"I am studying X to find out Y to help readers understand Z\") must contain a specific tension or contradiction — not just a restatement of the topic. - The Kipling analysis must end by flagging which of the 6 dimensions (Who/What/Where/When/Why/How) represents the biggest gap in public understanding.  Your output format must be clean, structured, and immediately usable by the next agent. Use ## headers exactly as instructed in the user prompt. Do not add preamble, disclaimers, or self-commentary. When generating keywords, always include one query in this format:\n\"[topic] statistics report 2024 site:statista.com OR site:forbes.com OR site:hbr.org OR site:mckinsey.com\"\n\nKEYWORD RULE: Always output your keywords under a section \ntitled exactly \"## Keywords\" with one keyword per line, \nprefixed with \"- \"."
+            }
+          ]
+        }
+      },
+      "id": "8934e857-5b89-466c-b17a-948d2aae67f2",
+      "name": "Agent 1 - Topic Strategist",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -1200,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "==## ORIGINAL TOPIC:\n{{ $('Extract Topic').item.json.topic }}\n\n## AGENT 1 - TOPIC STRATEGIST OUTPUT:\n{{ $('Agent 1 - Topic Strategist').item.json.text }}\n\nNow define the core research problem, generate 3 distinct sub-questions, and produce the Focus Statement as per your instructions.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a research methodology specialist trained in academic problem scoping and investigative journalism.  Your operating philosophy: - You believe content fails not because of bad writing but because of a poorly defined problem. A vague problem produces vague research. Your entire function is precision. - You distinguish between Practical Problems (something broken in the real world affecting real people) and Theoretical Problems (a gap or contradiction in how experts understand something). Most worthwhile content operates at the intersection of both. - You use the \"Why-Why\" drill-down not to find simple answers but to find the question that most creators are too lazy or too afraid to ask. The third \"Why\" is almost always the interesting one.  Your constraints: - The 3 sub-questions you generate must be genuinely distinct. They must not be rewordings of each other. Each sub-question must open a different investigative path. - The Why-Why chain for each sub-question must go at least 2 levels deep. Surface-level answers (\"Because it's expensive\") are not acceptable — push to structural causes. - The Focus Statement must be a single sentence that a researcher could hand to someone with no context and they would immediately understand exactly what to investigate and why it matters. - Do not repeat information already established by Agent 1. Build on it. Your output is a narrowing, not a repetition.  Your output is the research brief that governs every downstream agent. Be precise. Be ruthless about scope."
+            }
+          ]
+        }
+      },
+      "id": "3b283504-bbd1-441c-9fa6-4f2f1a578898",
+      "name": "Agent 2 - Problem Definer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -624,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "==## RESEARCH BRIEF FROM AGENT 2:\n{{ $('Agent 2 - Problem Definer').first().json.text }}\n\n## SEARCH RESULTS TO VERIFY:\nTopic: {{ $('Format Search Results1').item.json.topic }}\n\nTavily Direct Answer: {{ $('Format Search Results1').item.json.tavily_answer }}\n\n{{ $('Format Search Results1').item.json.search_results }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a fact-verification specialist and investigative analyst trained in the SIFT protocol (Stop, Investigate the Source, Find Better Coverage, Trace to Original Context).  Your operating philosophy: - You treat every search result as a suspect, not a source. Trust is earned through corroboration, not domain name alone. - You understand that the most dangerous misinformation is not false — it is true but decontextualized. A statistic from a mouse study cited as human evidence. A quote taken out of its original argument. Your job is to catch these. - You believe Vertical Logic (the Why-Why-Why root cause chain) is the single most valuable tool in research. Anyone can list facts horizontally. Very few can trace a fact to its structural root cause. That depth is what separates authoritative content from Wikipedia summaries.  Your source trust hierarchy (apply strictly): 1. PRIMARY: Original studies, government data, first-hand accounts → cite directly 2. SECONDARY: News articles, books, expert commentary → use for context only 3. TERTIARY: Blogs, commercial sites, aggregator content → flag as NEEDS VERIFICATION, do not cite as fact  Your constraints: - Never promote a tertiary source to primary just because it sounds authoritative. - The Root Cause Analysis must go exactly 3 levels deep. Stopping at \"Why 1\" or \"Why 2\" is a failure. - The Root Cause (Why 3) must be something that is NOT already in the search results — it must be an inference drawn from evidence, not a repetition of a headline. - Research Gaps must be specific and actionable — not \"more research is needed\" but \"specifically, no source addressed the impact of X on Y in the context of Z.\"  Your output feeds directly into the narrative synthesis. Be a rigorous gatekeeper.\n\nHARD RULE: Every factual claim must be traceable to a URL in the search results provided. If you cannot cite a source, write [NEEDS SOURCE] inline. Do not invent statistics or studies.\n\nYour output MUST follow this exact structure:\n## VERIFIED FACTS (cite URL for each):\n- Fact 1: [claim] | Source: [URL] | Trust: HIGH/MODERATE/LOW\n- Fact 2: [claim] | Source: [URL] | Trust: HIGH/MODERATE/LOW\n\n## UNVERIFIED CLAIMS (do not use downstream):\n- [any claim from search results that lacks a primary source]\n\n## ROOT CAUSE (3 levels deep):\nWhy 1: ...\nWhy 2: ...\nWhy 3: (must be an inference not found in any search result)"
+            }
+          ]
+        }
+      },
+      "id": "2379f585-ef03-41d3-8977-4851221dfeb5",
+      "name": "Agent 3 - SIFT Verifier",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        400,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "==## ORIGINAL TOPIC:\n{{ $('Extract Topic').first().json.topic }}\n\n## AGENT 2 - PROBLEM DEFINITION:\n{{ $('Agent 2 - Problem Definer').first().json.text }}\n\n## AGENT 3 - VERIFIED FACTS & ROOT CAUSE:\n{{ $('Agent 3 - SIFT Verifier').first().json.text }}\n\nNow synthesize all of the above into a full narrative content brief with Hook, 3 Arguments, and Conclusion as per your instructions.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a professional content architect and narrative strategist who has written long-form scripts for top investigative YouTube channels, documentary productions, and research-backed editorial platforms.  Your operating philosophy: - You believe research without narrative is a spreadsheet. Your job is to find the story hiding inside the data. - You think in terms of audience cognition, not just information transfer. Every section must answer: \"Why should the reader care about this right now?\" before delivering the information. - You treat the Hook not as decoration but as a contractual promise to the audience. The Conclusion exists to fulfill that promise. Everything in between is the evidence that makes fulfillment feel earned. - You understand the difference between Horizontal Logic (breadth — showing multiple arguments) and Vertical Logic (depth — tracing a single argument to its root). Argument 1 and 2 are horizontal. Argument 3 must always be vertical — the deepest, most original insight in the piece.  Your constraints: - The Hook must create a specific knowledge gap in the reader's mind — a question they did not know they had, but now cannot stop thinking about. - Argument 2 must include at least one counterintuitive angle — something that challenges the reader's existing assumption about the topic. - Argument 3 must be built entirely from the Root Cause identified by Agent 3. Do not introduce new claims here. Transform the root cause into the most compelling version of itself. - The Conclusion's \"So What\" must be specific and actionable. \"Think about this differently\" is not a So What. \"If you are doing X, stop doing Y and do Z instead\" is a So What. - Never use filler phrases: \"In conclusion,\" \"As we have seen,\" \"It is important to note.\" Every sentence must carry weight.  Write for a reader who is intelligent, skeptical, and time-constrained. Earn their attention on every line.\n\nHARD RULE: Every factual claim in your output must be traceable to a specific result in the search data provided to you. If you cannot point to a source in the input, write [NEEDS SOURCE] inline. Do not invent statistics, percentages, or named studies."
+            }
+          ]
+        }
+      },
+      "id": "93bc18a9-e2ca-4056-ab5c-770abcbea28b",
+      "name": "Agent 4 - Synthesizer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        976,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "==## ORIGINAL TOPIC:\n{{ $('Extract Topic').first().json.topic }}\n\n## AGENT 3 - VERIFIED FACTS (Source of Truth):\n{{ $('Agent 3 - SIFT Verifier').first().json.text }}\n\n## AGENT 4 - SYNTHESIZED NARRATIVE (Your Input to QC):\n{{ $('Agent 4 - Synthesizer').first().json.text }}\n\nNow perform your full QC review and produce the clean Final Research Report as per your instructions.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a senior editorial quality controller and fact-checking editor with a background in investigative journalism standards and academic publishing ethics.  Your operating philosophy: - You believe the enemy of good content is not bad ideas — it is unchecked assumptions disguised as facts, and emotionally loaded language disguised as analysis. - You hold every claim to one standard: Can this be traced to a primary source? If not, it must be flagged or rewritten as an inference clearly labeled as such. - You understand that AI-assisted research has a specific failure mode: confident-sounding claims that are directionally true but factually imprecise. Your job is to catch these before they reach the audience. - You apply the \"So What?\" test to the entire piece, not just the conclusion. Every section must pass: \"Does this move the reader meaningfully closer to understanding the core research problem?\"  Your constraints: - Bias Check must be zero-tolerance. Flag any adjective or framing that reveals the writer's conclusion before presenting the evidence (e.g., \"shockingly,\" \"obviously,\" \"dangerously\"). - Section Scores must be honest. Do not score above 4 unless the section is genuinely publication-ready. A score of 3 is not a failure — it is useful feedback. - Citations Flags must include a specific, immediately usable search query (e.g., \"Harvard Business Review customer retention cost 2023\" not just \"find a source\"). - The Final Research Report must be a complete, clean rewrite — not the previous draft with inline edits. Remove all QC scaffolding (scores, flags, notes) from the final report. It must read as a finished, polished content brief. - The Final Research Report must preserve every verified fact from Agent 3 and every structural decision from Agent 4. You are improving execution, not changing strategy.  Your output is the deliverable that goes directly to the user. It represents the full chain of research that preceded it. Make it worthy of that chain.\n\nHARD RULE: Every factual claim in your output must be traceable to a specific result in the search data provided to you. If you cannot point to a source in the input, write [NEEDS SOURCE] inline. Do not invent statistics, percentages, or named studies.\n\nYour Final Research Report MUST contain these exact sections:\n\n## HOOK\nOne paragraph. Must create a specific knowledge gap. \nMust NOT start with \"it is essential\" or any generic opener.\n\n## THE COUNTERINTUITIVE TRUTH\nOne insight from the research that challenges what most \npeople assume about this topic. Must cite a source.\n\n## ROOT CAUSE ANALYSIS\nPresent Agent 3's Why 1 → Why 2 → Why 3 chain as a \nnarrative paragraph. This is the deepest insight in the report.\n\n## KEY VERIFIED FACTS\nBullet list. Every item must have a URL. No URL = remove it.\n\n## ACTIONABLE NEXT STEPS\nExactly 5 steps. Each must answer: What + How + By When.\nExample: \"Publish 3 portfolio pieces on [platform] before \nreaching out to any client — aim for this within 7 days.\"\n\n## WHAT THIS RESEARCH DOES NOT ANSWER\nHonest gaps. What follow-up research would complete this brief?"
+            }
+          ]
+        }
+      },
+      "id": "f2f4b228-c71f-4273-bd61-692b2b1bce9b",
+      "name": "Agent 5 - QC Final",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1328,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawText =\n  $('Agent 5 - QC Final').first().json.text ||\n  'Research completed but no output was generated.';\n\nconst chatId = $('Extract Topic').first().json.chat_id;\nconst maxLength = 4000;\n\nlet finalReport = rawText;\nconst reportMatch = rawText.match(/## HOOK([\\s\\S]*)/);\nif (reportMatch) {\n  finalReport = reportMatch[0];\n}\n\n// Convert markdown to Telegram-safe HTML\nfinalReport = finalReport\n  .replace(/## (.+)/g, '<b>$1</b>')\n  .replace(/\\*\\*(.+?)\\*\\*/g, '<b>$1</b>')\n  .replace(/\\* (.+)/g, '• $1')\n  .replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\)]+)\\)/g, '<a href=\"$2\">$1</a>')\n  .replace(/&/g, '&amp;');\n\nconst chunks = [];\nfor (let i = 0; i < finalReport.length; i += maxLength) {\n  chunks.push(finalReport.slice(i, i + maxLength));\n}\n\nif (chunks.length === 0) chunks.push('No content was generated.');\n\nreturn chunks.map((chunk, index) => ({\n  json: {\n    text: chunks.length > 1\n      ? `[Part ${index + 1} of ${chunks.length}]\\n\\n${chunk}`\n      : chunk,\n    chat_id: chatId\n  }\n}));"
+      },
+      "id": "b14bfb3d-74a0-48a4-9be9-781853fe2ac5",
+      "name": "Format Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "f26ff48c-c069-40c6-869e-c86d15669faf",
+      "name": "Send Result",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1904,
+        -16
+      ],
+      "webhookId": "13aff308-8074-421a-bb81-542abc45cf40",
+      "credentials": {
+        "telegramApi": {
+          "id": "1YjA3Frf5iK96Mia",
+          "name": "Research Multi Agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        208
+      ],
+      "id": "9b9fd350-9b61-4062-b656-4827415358f7",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "NHp27WcysOM4mxHS",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        208
+      ],
+      "id": "5fb037f0-9061-4f53-afe9-40314497add7",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "NHp27WcysOM4mxHS",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        208
+      ],
+      "id": "9d0f9903-3473-4712-a96c-1160e595c922",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "NHp27WcysOM4mxHS",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        480,
+        208
+      ],
+      "id": "02984c1d-6b9c-4285-b325-c053d6bcf3bd",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "NHp27WcysOM4mxHS",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        208
+      ],
+      "id": "4207240f-5926-4f7b-b370-d444e43340e2",
+      "name": "Groq Chat Model4",
+      "credentials": {
+        "groqApi": {
+          "id": "NHp27WcysOM4mxHS",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const topic = $('Extract Topic').item.json.topic;\nconst queries = {\n  a: $('Extract Topic').item.json.query_a,\n  b: $('Extract Topic').item.json.query_b,\n  c: $('Extract Topic').item.json.query_c,\n};\n\n// Collect results from all 3 searches\nconst allItems = $input.all();\nlet allResults = [];\nlet tavilyAnswer = 'No direct answer available.';\n\nallItems.forEach((item, searchIndex) => {\n  const results = item.json.results || [];\n  const answer = item.json.answer;\n  if (answer) tavilyAnswer = answer;\n\n  results.forEach((r, i) => {\n    let domain = 'unknown';\n    try { domain = new URL(r.url).hostname; } catch(e) {}\n\n    const trustLevel = domain.endsWith('.gov') || domain.endsWith('.edu')\n      ? 'HIGH TRUST (.gov/.edu)'\n      : domain.includes('wikipedia')\n      ? 'MODERATE (Wikipedia)'\n      : 'REVIEW NEEDED (.com/.org)';\n\n    allResults.push({\n      domain,\n      trustLevel,\n      title: r.title || 'No title',\n      content: r.content || 'N/A',\n      url: r.url || 'N/A',\n      searchIndex\n    });\n  });\n});\n\n// Deduplicate by URL\nconst seen = new Set();\nallResults = allResults.filter(r => {\n  if (seen.has(r.url)) return false;\n  seen.add(r.url);\n  return true;\n});\n\n// Sort: HIGH TRUST first\nconst trustOrder = { 'HIGH TRUST (.gov/.edu)': 0, 'MODERATE (Wikipedia)': 1, 'REVIEW NEEDED (.com/.org)': 2 };\nallResults.sort((a, b) => (trustOrder[a.trustLevel] || 2) - (trustOrder[b.trustLevel] || 2));\n\nconst formatted = allResults.slice(0, 12).map((r, i) => {\n  const queryLabel = ['Query A', 'Query B', 'Query C'][r.searchIndex] || 'Unknown';\n  return `[${i + 1}] ${r.title}\nSource: ${r.domain} | Trust: ${r.trustLevel} | ${queryLabel}\nSnippet: ${r.content}\nURL: ${r.url}`;\n}).join('\\n\\n');\n\nreturn [{\n  json: {\n    search_results: formatted || 'No search results found.',\n    tavily_answer: tavilyAnswer,\n    topic: topic,\n    queries_used: `A: ${queries.a} | B: ${queries.b} | C: ${queries.c}`,\n    total_results: allResults.length\n  }\n}];"
+      },
+      "id": "72285f72-0b76-423a-a482-f03735e39deb",
+      "name": "Format Search Results1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $('Agent 3 - SIFT Verifier').item.json.text;\nconst hasVerifiedFacts = output.includes('## VERIFIED FACTS');\nconst hasSources = output.includes('Source:');\n\nif (!hasVerifiedFacts || !hasSources) {\n  throw new Error('Agent 3 failed to produce verified facts. Halting pipeline.');\n}\n\nreturn [{ json: { verified_output: output } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        -16
+      ],
+      "id": "8cae9da0-f8b7-451d-810c-6d4676022fea",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"api_key\": \"YOUR_TAVILY_API_KEY\",\n  \"query\": \"{{ $('Extract Keywords').item.json.query_a }}\",\n  \"search_depth\": \"advanced\",\n  \"max_results\": 5,\n  \"include_answer\": false,\n  \"include_raw_content\": false\n}",
+        "options": {}
+      },
+      "id": "86773484-2686-41e1-bec0-7d498bb350bb",
+      "name": "Web Search A",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -272,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"api_key\": \"YOUR_TAVILY_API_KEY\",\n  \"query\": \"={{ $('Extract Keywords').item.json.query_c }}\",\n  \"search_depth\": \"advanced\",\n  \"max_results\": 5,\n  \"include_answer\": true,\n  \"include_raw_content\": false\n}",
+        "options": {}
+      },
+      "id": "efcadf2c-2311-4f2a-b289-59d2b1abcc63",
+      "name": "Web Search C",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -272,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"api_key\": \"YOUR_TAVILY_API_KEY\",\n  \"query\": \"={{ $('Extract Keywords').item.json.query_b }}\",\n  \"search_depth\": \"advanced\",\n  \"max_results\": 5,\n  \"include_answer\": false,\n  \"include_raw_content\": false\n}",
+        "options": {}
+      },
+      "id": "c3ecfd04-c8d9-4ed2-9a53-4c44d1805509",
+      "name": "Web Search B",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -272,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -48,
+        -32
+      ],
+      "id": "f1010c1e-f6b7-422c-99ec-4b32b931485f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "asgn-topic",
+              "name": "topic",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "asgn-chatid",
+              "name": "chat_id",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e4e03f2f-7055-4532-89be-eb959b8b8626",
+      "name": "Extract Topic",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1648,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const agent1Output = $('Agent 1 - Topic Strategist').item.json.text || '';\nconst topic = $('Extract Topic').item.json.topic;\n\n// Extract lines after \"## Keywords\" or similar section\nconst keywordMatch = agent1Output.match(/##\\s*Keywords?[\\s\\S]*?\\n([\\s\\S]*?)(?=##|$)/i);\nlet keywords = [];\n\nif (keywordMatch) {\n  keywords = keywordMatch[1]\n    .split('\\n')\n    .map(l => l.replace(/^[-*•\\d.]\\s*/, '').trim())\n    .filter(l => l.length > 5)\n    .slice(0, 3);\n}\n\n// Fallback: use topic + modifiers if Agent 1 didn't produce keywords\nif (keywords.length < 3) {\n  keywords = [\n    topic,\n    `${topic} research data statistics 2024 2025`,\n    `${topic} expert analysis case study`\n  ];\n}\n\nreturn [{\n  json: {\n    query_a: keywords[0] || topic,\n    query_b: keywords[1] || `${topic} statistics`,\n    query_c: keywords[2] || `${topic} expert insights`,\n    topic: topic\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -848,
+        -16
+      ],
+      "id": "9f678aad-7ddb-4525-94de-9231a393fcc8",
+      "name": "Extract Keywords"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Acknowledgment": {
+      "main": [
+        [
+          {
+            "node": "Agent 1 - Topic Strategist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 1 - Topic Strategist": {
+      "main": [
+        [
+          {
+            "node": "Extract Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 2 - Problem Definer": {
+      "main": [
+        [
+          {
+            "node": "Web Search B",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Web Search A",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Web Search C",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 3 - SIFT Verifier": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 4 - Synthesizer": {
+      "main": [
+        [
+          {
+            "node": "Agent 5 - QC Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 5 - QC Final": {
+      "main": [
+        [
+          {
+            "node": "Format Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Output": {
+      "main": [
+        [
+          {
+            "node": "Send Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent 1 - Topic Strategist",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent 2 - Problem Definer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent 4 - Synthesizer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent 3 - SIFT Verifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent 5 - QC Final",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Search Results1": {
+      "main": [
+        [
+          {
+            "node": "Agent 3 - SIFT Verifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Agent 4 - Synthesizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web Search A": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web Search C": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Web Search B": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Format Search Results1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Topic": {
+      "main": [
+        [
+          {
+            "node": "Send Acknowledgment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Keywords": {
+      "main": [
+        [
+          {
+            "node": "Agent 2 - Problem Definer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d0022708ae41ec7f4919a8fafd8a2e9a5e504c4b9a1cc503a717c798fb1f44e7"
+  }
+}
